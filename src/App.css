@@ -7,3 +7,44 @@ html {
   scroll-behavior: smooth;
   background-color: #060606;
 }
+
+/* Custom Scrollbar Styling for Dark Mode */
+
+/* 1. The container (the track) */
+::-webkit-scrollbar {
+  width: 8px; /* Vertical scrollbar width */
+  height: 8px; /* Horizontal scrollbar height */
+}
+
+/* 2. The background of the scrollbar */
+::-webkit-scrollbar-track {
+  background: #0e0e10; /* Matches your main bg-color */
+}
+
+/* 3. The draggable handle */
+::-webkit-scrollbar-thumb {
+  background: #27272a; /* zinc-800 */
+  border-radius: 10px;
+  border: 2px solid #0e0e10; /* Creates a "floating" effect */
+}
+
+/* 4. Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46; /* zinc-700 */
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a #0e0e10;
+}
+
+/* Specialized scrollbar for the Canvas code area */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e1e1e; /* Matches VS Code background */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #333333;
+  border: 2px solid #1e1e1e;
+}

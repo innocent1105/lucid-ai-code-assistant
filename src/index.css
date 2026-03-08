@@ -7,3 +7,97 @@ html {
   scroll-behavior: smooth;
   background-color: #060606;
 }
+
+/* Custom Scrollbar Styling for Dark Mode */
+
+/* 1. The container (the track) */
+::-webkit-scrollbar {
+  width: 8px; /* Vertical scrollbar width */
+  height: 8px; /* Horizontal scrollbar height */
+}
+
+/* 2. The background of the scrollbar */
+::-webkit-scrollbar-track {
+  background: #0e0e10; /* Matches your main bg-color */
+}
+
+/* 3. The draggable handle */
+::-webkit-scrollbar-thumb {
+  background: #27272a; /* zinc-800 */
+  border-radius: 10px;
+  border: 2px solid #0e0e10; /* Creates a "floating" effect */
+}
+
+/* 4. Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46; /* zinc-700 */
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a #0e0e10;
+}
+
+/* Specialized scrollbar for the Canvas code area */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e1e1e; /* Matches VS Code background */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #333333;
+  border: 2px solid #1e1e1e;
+}
+
+/* 1. The Breathing Neon Glow */
+@keyframes neon-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.2), 0 0 70px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 180px rgba(139, 92, 246, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.2), 0 0 70px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* 2. Rotating Gradient Border (Modern) */
+@keyframes rotate-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 3. The "Pulse" utility class */
+.animate-neon {
+  animation: neon-glow 3s ease-in-out infinite;
+}
+
+/* 4. Advanced: Glassmorphism Border Glow */
+.glass-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-glow::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent, 
+    rgba(59, 130, 246, 0.3), 
+    rgba(168, 85, 247, 0.3), 
+    transparent 60%
+  );
+  animation: rotate-bg 4s linear infinite;
+  z-index: -1;
+}
+
+@keyframes rotate-bg {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
