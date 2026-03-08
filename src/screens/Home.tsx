@@ -36,6 +36,28 @@ export default function GeminiLucid() {
   const [deepReasoning, setDeepReasoning] = useState(true);
   const [humanize, setHumanize] = useState(true);
 
+  const [copied, setCopied] = useState(false);
+  const [systemNotification, setSystemNotification] = useState("");
+  
+useEffect(() => {
+  if (!systemNotification) return;
+
+  const timer = setTimeout(() => {
+    setSystemNotification("");
+  }, 7000);
+
+  return () => clearTimeout(timer);
+}, [systemNotification]);
+
+  useEffect(()=>{
+    if(copied){
+      setSystemNotification("Response copied to clipboard!");
+      setTimeout(()=>{
+        setSystemNotification("");
+      }, 7000)
+    }
+  }, [copied])
+
   const conversations = useLiveQuery(() => db.conversations.orderBy('createdAt').reverse().toArray()) || [];
   const messages = useLiveQuery(
     () => (activeConvId ? db.messages.where('conversationId').equals(activeConvId).toArray() : []),
@@ -52,6 +74,65 @@ export default function GeminiLucid() {
     setIsCanvasOpen(true);
   };
 
+
+  const completionMessages = [
+    "How is your day going...",
+    "Done.",
+    "Response ready.",
+    "Finished processing.",
+    "Task complete.",
+    "Did you attend class today?",
+    "Dont mind my replies, I am a bit stressed right now...",
+    "Ready for your next prompt.",
+    "I hope that fits your question.",
+    "Have you eaten?.",
+    "Say hello if you want me to smile.",
+    "Alright, that's what I found.",
+    "I think that should help.",
+    "There we go.",
+    "That took a second, but I'm back.",
+    "Alright… that's my best shot.",
+    "Okay, finished thinking.",
+    "Here’s what I came up with.",
+    "I tried my best with that one.",
+    "Not my finest answer, but it should work.",
+    "That one made me think a bit.",
+    "Alright, sending it over.",
+    "Okay, done thinking about it. Tell me what you think about this",
+    "I hope that makes sense.",
+    "That’s everything I’ve got.",
+    "Well… that was interesting.",
+    "Alright, that should do it.",
+    "I think we're good.",
+    "Okay, moving on.",
+    "There you have it.",
+    "That answer came together nicely.",
+    "I'm a little unsure, but here it is.",
+    "Hope that clears things up.",
+    "That question was actually fun.",
+    "Well… that’s my take.",
+    "Done thinking.",
+    "Okay, next challenge?",
+    "I'm here if you want to dig deeper.",
+    "That one took some brain power.",
+    "I might need coffee after that one.",
+    "Alright, let's keep going.",
+    "I hope I didn't mess that up.",
+    "Okay… sending the answer now.",
+    "That should point you in the right direction.",
+    "I'm feeling decent about that reply.",
+    "Not perfect, but it should help.",
+    "You are actually talking to a real human tho.",
+    "I gave that one some thought.",
+    "Hope you're having a good day, by the way.",
+    "Anyway… here's the answer.",
+    "Alright, I'm done."
+  ];
+
+  function getRandomCompletionMessage(): string {
+    const index = Math.floor(Math.random() * completionMessages.length);
+    return completionMessages[index];
+  }
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -69,13 +150,16 @@ export default function GeminiLucid() {
 
     setInput('');
     setIsLoading(true);
+
+    
    
     try {
         const res = await axios.post(`${API_BASE_URL}/lucid_ai.php`, {
             prompt: input,
-            deepReseach: deepResearch,
-            deepReasoning: deepReasoning,
-            humanize: humanize
+            reseach: deepResearch,
+            reason: deepReasoning,
+            humanize: humanize,
+            conversation : JSON.stringify(messages),
         });
         
         if (res.data.status === "success") {
@@ -85,6 +169,11 @@ export default function GeminiLucid() {
                 content: `${res.data.message}`,
                 timestamp: Date.now(),
             });
+            const whatToSay = getRandomCompletionMessage();
+            setSystemNotification(whatToSay);
+            setTimeout(()=>{
+              setSystemNotification("");
+            }, 7000)
         } else {
             await db.messages.add({
                 conversationId: convId!,
@@ -92,6 +181,10 @@ export default function GeminiLucid() {
                 content: `An error occurred while I was thinking, please try again after a minute.`,
                 timestamp: Date.now(),
             });
+              setSystemNotification(`I am a bit tired right now, please give me a minute.`);
+              setTimeout(()=>{
+                setSystemNotification("");
+              }, 5000)
         }
     } catch (err) {
         await db.messages.add({
@@ -112,7 +205,7 @@ export default function GeminiLucid() {
         isSidebarOpen ? "w-72 translate-x-0" : "w-0 md:w-20 -translate-x-full md:translate-x-0 overflow-hidden"
       )}>
         <div className="p-4 flex flex-col h-full">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 cursor-pointer hover:bg-zinc-800 rounded-full w-fit transition mb-8 text-zinc-400">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 hidden md:block lg:block cursor-pointer hover:bg-zinc-800 rounded-full w-fit transition mb-8 text-zinc-400">
             <Menu size={22} />
           </button>
 
@@ -157,7 +250,12 @@ export default function GeminiLucid() {
             <div className="flex items-center gap-2">
               <span className="text-xl font-medium text-zinc-200 tracking-tight">Lucid <span className="text-blue-500">AI</span></span>
             </div>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg ring-1 ring-zinc-700" />
+            {/* <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg ring-1 ring-zinc-700" /> */}
+
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 md:hidden lg:hidden mt-8 cursor-pointer hover:bg-zinc-800 rounded-full w-fit transition mb-8 text-zinc-400">
+              <Menu size={22} />
+            </button>
+
           </header>
 
           <div className="flex-1 overflow-y-auto px-4 scrollbar-hide">
@@ -171,7 +269,7 @@ export default function GeminiLucid() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full px-4">
                   {['Plan a trip', 'Summarize text', 'Write code'].map(tag => (
-                    <div key={tag} onClick={() => setInput(tag)} className="bg-zinc-900 glass-glow border border-zinc-800 p-4 rounded-2xl text-center text-sm text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800 cursor-pointer transition-all">
+                    <div key={tag} onClick={() => setInput(tag)} className="bg-zinc-900 w-auto active:scale-95 border border-zinc-900 p-4 rounded-full text-center text-sm text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800 cursor-pointer transition-all">
                       {tag}
                     </div>
                   ))}
@@ -184,7 +282,7 @@ export default function GeminiLucid() {
                     <div className={cn("flex gap-4 max-w-full", m.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                       <div className={cn("flex flex-col space-y-2", m.role === 'user' ? "items-end" : "items-start")}>
                         <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-500 px-1">
-                          {m.role === 'assistant' ? 'Lucid AI' : 'You'}
+                          {m.role === 'assistant' ? '' : 'You'}
                         </p>
                         <div className={cn(
                           "text-[16px] leading-relaxed transition-all",
@@ -204,7 +302,7 @@ export default function GeminiLucid() {
                                         <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{match[1]}</span>
                                         <button 
                                           onClick={() => handleOpenCanvas(codeContent, match[1])}
-                                          className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                          className="flex active:scale-95 cursor-pointer items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
                                         >
                                           <Code2 size={12} /> Open in Canvas
                                         </button>
@@ -227,6 +325,22 @@ export default function GeminiLucid() {
                             {m.content}
                           </ReactMarkdown>
                         </div>
+
+                        {m.role === 'assistant' && (
+                          <div className="flex items-center gap-2">
+                            <button className="p-2 active:scale-95 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition" 
+                              onClick={() => {
+                                navigator.clipboard.writeText(m.content || '');
+                                setCopied(true);
+                              }}
+                              >
+                              <Copy size={16} /> 
+                            </button>
+                            
+                          </div>
+                        )}
+
+
                       </div>
                     </div>
                   </div>
@@ -245,34 +359,77 @@ export default function GeminiLucid() {
             )}
           </div>
 
-          <div className="p-4 shrink-0 bg-[#0E0E10] border-t border-zinc-800/50">
+          <div className="p-4 pt-2 shrink-0 bg-[#0E0E10] border-t border-zinc-800/30">
+
+            <div 
+              className = {`
+                ${systemNotification.length > 1 ? "z-0 pb-20 mb-[-70px] animate-neon" : "z-0 pb-0 mb-[-70px]"}
+                w-full transition-all text-zinc-200 text-md max-w-3xl mx-auto bg-zinc-900 border border-zinc-800 rounded-t-[28px] px-6 py-2 flex flex-col shadow-2xl focus-within:border-zinc-600 transition-all`}>
+              {systemNotification}
+            </div>
+
             <form onSubmit={handleSendMessage} className={`
                 ${messages.length == 0 || isLoading && " animate-neon"}
-                w-full max-w-3xl mx-auto bg-zinc-900 border border-zinc-800 rounded-[28px] px-6 py-2 flex flex-col shadow-2xl focus-within:border-zinc-600 transition-all
+                w-full z-100 max-w-3xl z-100 mx-auto bg-zinc-900 border border-zinc-800 rounded-[28px] px-6 py-2 flex flex-col shadow-2xl focus-within:border-zinc-600 transition-all
               `}>
               <textarea
                 rows={1}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask Lucid anything..."
-                className="w-full bg-transparent border-none outline-none py-4 text-zinc-100 placeholder:text-zinc-500 resize-none max-h-40"
+                className={`
+                    ${input.length > 240 ? "h-[180px]" : "max-h-40"}
+                    w-full bg-transparent border-none outline-none py-4 text-zinc-100 placeholder:text-zinc-500 resize-none 
+                  `}
                 onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
               />
               <div className="flex items-center justify-between pb-2 border-t border-zinc-800 pt-2">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <ToggleButton icon={<SearchCheck size={14}/>} label="Deep Reasoning" active={deepReasoning} onClick={() => setDeepReasoning(!deepReasoning)} />
-                  <ToggleButton icon={<ScanSearch size={14}/>} label="Deep Research" active={deepResearch} onClick={() => setDeepResearch(!deepResearch)} />
-                  <ToggleButton icon={<UserRoundPen size={14}/>} label="Humanize" active={humanize} onClick={() => setHumanize(!humanize)} />
+
+                  <ToggleButton
+                    icon={<SearchCheck size={14}/>} label="Deep Reasoning" active={deepReasoning} 
+                    onClick={() => {
+                      if (!deepReasoning) {
+                        setSystemNotification("I will reason deeper than usual, I promise.");
+                      }
+                      setDeepReasoning(!deepReasoning);
+                    }}
+                  />
+
+                  <ToggleButton
+                    icon={<ScanSearch size={14} />}
+                    label="Deep Research"
+                    active={deepResearch}
+                    onClick={() => {
+                      if (!deepResearch) {
+                        setSystemNotification("I will verify my replies from trusted sources online.");
+                      }
+                      setDeepResearch(!deepResearch);
+                    }}
+                  />
+                  <ToggleButton
+                    icon={<UserRoundPen size={14} />}
+                    label="Humanize"
+                    active={humanize}
+                    onClick={() => {
+                      if (!humanize) {
+                        setSystemNotification("Cool, I will sound human.");
+                      }
+                      setHumanize(!humanize);
+                    }}
+                  />
                 </div>
-                <button type="submit" disabled={!input.trim() || isLoading} className="p-2.5 cursor-pointer text-blue-500 hover:bg-zinc-800 rounded-full disabled:text-zinc-700 transition-all">
+                <button type="submit" disabled={!input.trim() || isLoading} className="p-2.5 active:scale-95 cursor-pointer text-blue-500 hover:bg-zinc-800 rounded-full disabled:text-zinc-700 transition-all">
                   <Send size={22} fill={input.trim() ? "currentColor" : "none"} />
                 </button>
               </div>
             </form>
+            <div className="mt-1 text-xs text-center text-zinc-500">
+              Lucid AI may make some mistakes, please go through each response.
+            </div>
           </div>
         </main>
 
-        {/* CANVAS SECTION */}
         {isCanvasOpen && (
           <aside className="flex-1 bg-[#1e1e1e] flex flex-col animate-in slide-in-from-right duration-500 z-10 border-l border-zinc-800 shadow-2xl">
             <div className="h-16 flex items-center justify-between px-6 bg-[#252526] border-b border-zinc-800">
@@ -286,10 +443,10 @@ export default function GeminiLucid() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition" onClick={() => navigator.clipboard.writeText(activeCode || '')}>
+                <button className="p-2 active:scale-95 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition" onClick={() => navigator.clipboard.writeText(activeCode || '')}>
                   <Copy size={16} />
                 </button>
-                <button className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition" onClick={() => setIsCanvasOpen(false)}>
+                <button className="p-2 active:scale-95 cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition" onClick={() => setIsCanvasOpen(false)}>
                   <X size={20} />
                 </button>
               </div>
@@ -318,14 +475,13 @@ export default function GeminiLucid() {
   );
 }
 
-// Dark Mode Toggle Button Component
 function ToggleButton({ icon, label, active, onClick }: { icon: any, label: string, active: boolean, onClick: () => void }) {
   return (
     <button 
       type="button" 
       onClick={onClick}
       className={cn(
-        "px-3 py-1.5 border cursor-pointer rounded-full flex items-center gap-2 text-[10px] md:text-xs font-medium transition-all",
+        "px-3 py-1.5 border active:scale-95 cursor-pointer rounded-full flex items-center gap-2 text-[10px] md:text-xs font-medium transition-all",
         active 
           ? "bg-blue-500/10 border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.1)]" 
           : "bg-zinc-800/50 border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
