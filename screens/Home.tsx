@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, Plus, MessageSquare, Share2, Copy, 
   Trash2, Search, Settings, Sparkles, User, 
-  PanelLeftClose, PanelLeftOpen, Terminal, Mic, Paperclip, Menu, Image as ImageIcon
+  PanelLeftClose, PanelLeftOpen, Terminal, Mic,ScanSearch,SearchCheck,UserRoundPen, Paperclip, Menu, Image as ImageIcon
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db';
@@ -19,6 +19,12 @@ export default function GeminiLucid() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [deepThinking, setDeepThinking] = useState(true);
+  const [deepResearch, setDeepResearch] = useState(true);
+  const [deepReasoning, setDeepReasoning] = useState(true);
+  
+  const [humanize, setHumanize] = useState(true);
 
   const conversations = useLiveQuery(() => db.conversations.orderBy('createdAt').reverse().toArray()) || [];
   const messages = useLiveQuery(
@@ -63,7 +69,7 @@ export default function GeminiLucid() {
   return (
     <div className="flex h-screen bg-white text-zinc-800 font-sans overflow-hidden">
       <aside className={cn(
-        "fixed md:relative inset-y-0 left-0 bg-[#E9EEF6] transition-all duration-300 z-50 flex flex-col border-r border-transparent",
+        "fixed md:relative inset-y-0 left-0 bg-gray-100 transition-all duration-300 z-50 flex flex-col border-r border-transparent",
         isSidebarOpen ? "w-72 translate-x-0" : "w-0 md:w-20 -translate-x-full md:translate-x-0 overflow-hidden"
       )}>
         <div className="p-4 flex flex-col h-full">
@@ -100,7 +106,7 @@ export default function GeminiLucid() {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col relative bg-white md:rounded-tl-[28px] md:my-2 md:mr-2 shadow-sm overflow-hidden">
+      <main className="flex-1 flex flex-col relative bg-white md:rounded-tl-[28px] md:my-2 md:mr-0 shadow-sm overflow-hidden">
         
         <header className="h-16 flex items-center justify-between px-6">
           <div className="flex items-center gap-2">
@@ -149,7 +155,6 @@ export default function GeminiLucid() {
                         {m.role === 'assistant' ? 'Lucid AI' : 'You'}
                         </p>
 
-                        {/* Text Body */}
                         <div className={cn(
                         "text-[16px] leading-relaxed whitespace-pre-wrap transition-all",
                         m.role === 'user' 
@@ -159,7 +164,6 @@ export default function GeminiLucid() {
                         {m.content}
                         </div>
 
-                        {/* Action Buttons (Assistant Only) */}
                         {m.role === 'assistant' && (
                         <div className="flex gap-3 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-zinc-600 transition">
@@ -188,7 +192,7 @@ export default function GeminiLucid() {
           )}
         </div>
 
-        <div className="p-4 md:pb-8 flex justify-center">
+        <div className="p-4 md:pb-4 flex justify-center">
           <form 
             onSubmit={handleSendMessage}
             className="w-full max-w-3xl bg-[#F0F4F9] rounded-[32px] px-6 py-2 flex flex-col shadow-sm focus-within:bg-[#E9EEF6] transition-all"
@@ -197,19 +201,50 @@ export default function GeminiLucid() {
               rows={1}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter a prompt here"
+              placeholder="Ask me anything..."
               className="w-full bg-transparent border-none outline-none py-4 text-zinc-800 placeholder:text-zinc-500 resize-none max-h-40"
               onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
             />
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center gap-1">
-                <button type="button" className="p-2 text-zinc-600 hover:bg-zinc-200/50 rounded-full transition"><ImageIcon size={20}/></button>
-                <button type="button" className="p-2 text-zinc-600 hover:bg-zinc-200/50 rounded-full transition"><Mic size={20}/></button>
+
+                <button type="button"
+                    onClick={()=>{
+                        setDeepReasoning(!deepReasoning);
+                    }}
+                    className={`
+                        ${deepReasoning ? "bg-blue-400/50 border-blue-200 text-zinc-800" : "bg-gray-300 border-gray-200 text-zinc-600"}
+                        p-2 border flex justify-space-between gap-2 text-xs hover:bg-blue-200 cursor-pointer rounded-full transition
+                    `}>
+                    <SearchCheck size={14}/> <div>Deep Reasoning</div>
+                </button>
+
+                <button type="button" 
+                    onClick={()=>{
+                        setDeepResearch(!deepResearch);
+                    }}
+                    className={`
+                        ${deepResearch ? "bg-blue-400/50 border-blue-200 text-zinc-800" : "bg-gray-300 border-gray-200 text-zinc-600"}
+                        p-2 border flex justify-space-between gap-2 text-xs hover:bg-blue-200 cursor-pointer rounded-full transition
+                    `}>
+                    <ScanSearch size={14}/> <div> Deep Research</div>
+                </button>
+                <button type="button" 
+                    onClick={()=>{
+                        setHumanize(!humanize);
+                    }}
+                    className={`
+                        ${humanize ? "bg-blue-400/50 border-blue-200 text-zinc-800" : "bg-gray-300 border-gray-200 text-zinc-600"}
+                        p-2 border flex justify-space-between gap-2 text-xs hover:bg-blue-200 cursor-pointer rounded-full transition
+                    `}>
+                    <UserRoundPen size={14}/> <div> Humanize</div>
+                </button>
+
               </div>
               <button 
                 type="submit"
                 disabled={!input.trim()}
-                className="p-2.5 text-blue-600 disabled:text-zinc-400 transition-all"
+                className="p-2.5 text-blue-600 cursor-pointer hover:bg-gray-200 rounded-full disabled:text-zinc-400 transition-all"
               >
                 <Send size={22} fill={input.trim() ? "currentColor" : "none"} />
               </button>
