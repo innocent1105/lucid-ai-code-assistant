@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add this for the Grok-style smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  background-color: #060606;
+}
