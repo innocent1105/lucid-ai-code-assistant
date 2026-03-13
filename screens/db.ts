@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-
+    
 export interface Message {
   id?: number;
   conversationId: number;
@@ -26,5 +26,6 @@ export class MyDatabase extends Dexie {
     });
   }
 }
+
 
 export const db = new MyDatabase();
